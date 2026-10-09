@@ -7,6 +7,7 @@ import * as mynahPlugin from '../src/index.ts'
 
 // A tiny fake Mynah: realtime + admin on one plain-HTTP port.
 const calls: Array<{ path: string; body: any; auth?: string }> = []
+let speakingFlag = 0 // >0: fake avatar reports speaking for that many polls
 let server: Server; let base = ''
 beforeAll(async () => {
   server = createServer((req, res) => {
@@ -20,6 +21,7 @@ beforeAll(async () => {
       if (req.url === '/api/v1/sessions') return send({ code: 0, data: [{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice: true }] })
       if (req.url === '/api/v1/channels') return send({ code: 0, data: [{ id: 11, slug: 'test', name: 'Mynah 演示', enabled: true, access_mode: 'public' }] })
       if (req.url === '/channel/test/config') return send({ access_mode: 'public', actions: ['wave'], name: 'Mynah 演示' })
+      if (req.url === '/is_speaking') return send({ code: 0, data: speakingFlag-- > 0 })
       if (req.url === '/human' || req.url === '/interrupt_talk' || req.url === '/action') return send({ code: 0, data: null })
       send({ code: 0, data: { ok: true } })
     })
@@ -57,13 +59,23 @@ describe('dsh-plugin-mynah', () => {
     expect(value).toEqual([{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice_enabled: true }])
     expect(calls.some((c) => c.path === '/api/v1/sessions' && c.auth === 'Bearer jwt-123')).toBe(true)
   })
-  it('mynah_speak posts verbatim text to /human with interrupt', async () => {
+  it('mynah_speak queues behind current speech by default and posts verbatim text', async () => {
     const ctx = await boot()
     const tool = ctx.tools.get('mynah_speak')!
-    const value = await tool.execute({ session_id: '100001', text: '你好，我是 Mynah。' }, exec('mynah_speak', {}))
+    speakingFlag = 3
+    const value = await tool.execute({ session_id: '100001', text: '你好，我是 Mynah。' }, exec('mynah_speak', {})) as any
     expect(value).toMatchObject({ ok: true, session_id: '100001', type: 'echo' })
+    expect(value.waited_ms).toBeGreaterThanOrEqual(300)
     const human = calls.filter((c) => c.path === '/human').at(-1)!
-    expect(human.body).toEqual({ sessionid: '100001', text: '你好，我是 Mynah。', type: 'echo', interrupt: true })
+    expect(human.body).toEqual({ sessionid: '100001', text: '你好，我是 Mynah。', type: 'echo', interrupt: false })
+  })
+  it('mynah_speak with interrupt=true talks immediately', async () => {
+    const ctx = await boot()
+    speakingFlag = 100
+    const value = await ctx.tools.get('mynah_speak')!.execute({ session_id: '100001', text: '停！', interrupt: true }, exec('mynah_speak', {})) as any
+    expect(value.waited_ms).toBe(0)
+    expect(calls.filter((c) => c.path === '/human').at(-1)!.body.interrupt).toBe(true)
+    speakingFlag = 0
   })
   it('mynah_channels reports gestures and mynah_action triggers one', async () => {
     const ctx = await boot()

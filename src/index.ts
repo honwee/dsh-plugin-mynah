@@ -12,7 +12,10 @@ export const name = 'mynah'
 export const inject = ['tools']
 
 /** Plugin configuration (every field also falls back to MYNAH_* environment variables). */
-export interface Config extends MynahConfig {}
+export interface Config extends MynahConfig {
+  /** Max time mynah_speak waits for the avatar to finish its current sentence before speaking (ms). */
+  queueTimeoutMs?: number
+}
 
 /** Runtime schema used by Cordis to validate the `cordis.yml` row. */
 export const Config: Schema<Config> = Schema.object({
@@ -22,30 +25,45 @@ export const Config: Schema<Config> = Schema.object({
   password: Schema.string().role('secret').description('Admin password (env MYNAH_PASSWORD)'),
   token: Schema.string().role('secret').description('Pre-issued admin JWT instead of username/password (env MYNAH_TOKEN)'),
   insecureTls: Schema.boolean().description('Accept self-signed TLS; defaults to true for 127.0.0.1/localhost'),
+  queueTimeoutMs: Schema.number().min(0).default(90_000).description('Max wait for the current sentence to finish before a queued mynah_speak talks (ms)'),
 })
 
-export function apply(ctx: Context, config: Config = {}) {
+export function apply(ctx: Context, config: Config = { queueTimeoutMs: 90_000 }) {
+  config = { queueTimeoutMs: 90_000, ...config }
   const mynah = new MynahClient(config)
   const text = (s: string) => [{ type: 'text' as const, text: s }]
 
   ctx.tools.register(defineTool({
     name: 'mynah_speak',
-    description: 'Make the Mynah digital human say something to the person watching it. Use type="echo" to speak the given text verbatim (recommended: you already decided what to say), or type="chat" to let Mynah\'s own conversation brain answer the text. Requires a live session id (see mynah_sessions).',
+    description: 'Make the Mynah digital human say something to the person watching it. Use type="echo" to speak the given text verbatim (recommended: you already decided what to say), or type="chat" to let Mynah\'s own conversation brain answer the text. By default the call QUEUES: if the avatar is still talking it waits for that sentence to finish, then speaks, so you can issue several speak calls back to back. Set interrupt=true to cut it off instead. Requires a live session id (see mynah_sessions).',
     parameters: {
       session_id: { type: 'string', required: true, description: 'Live Mynah session id (from mynah_sessions)' },
       text: { type: 'string', required: true, description: 'What the avatar should say (echo) or respond to (chat). Keep it short and spoken-style.' },
       type: { type: 'string', enum: ['echo', 'chat'], description: 'echo = speak verbatim (default); chat = route through Mynah brain' },
-      interrupt: { type: 'boolean', description: 'Interrupt current speech first (default true)' },
+      interrupt: { type: 'boolean', description: 'true = cut off current speech and talk now; false/omitted = wait for current speech to finish, then talk (default)' },
     },
     output: {
-      schema: { type: 'object', additionalProperties: false, properties: { ok: { type: 'boolean' }, session_id: { type: 'string' }, type: { type: 'string' }, chars: { type: 'integer' } } },
-      render: (_a, v) => text(`Mynah is speaking (${v.type}, ${v.chars} chars) in session ${v.session_id}.`),
+      schema: { type: 'object', additionalProperties: false, properties: { ok: { type: 'boolean' }, session_id: { type: 'string' }, type: { type: 'string' }, chars: { type: 'integer' }, waited_ms: { type: 'integer' } } },
+      render: (_a, v) => text(`Mynah is speaking (${v.type}, ${v.chars} chars) in session ${v.session_id}${v.waited_ms ? `, after waiting ${(v.waited_ms / 1000).toFixed(1)}s for the previous sentence` : ''}.`),
     },
     async execute(args, exec) {
       if (!args.text.trim()) throw new Error('text must not be empty')
       const type = (args.type ?? 'echo') as 'echo' | 'chat'
-      await mynah.speak(args.session_id, args.text, type, args.interrupt ?? true, exec.signal)
-      return { ok: true, session_id: args.session_id, type, chars: args.text.length }
+      const interrupt = args.interrupt === true
+      let waited = 0
+      if (!interrupt) {
+        // Mynah itself does not queue: a new /human call replaces the current turn.
+        // Wait (bounded) until the avatar is quiet so consecutive sentences do not clip.
+        const t0 = Date.now()
+        while (Date.now() - t0 < config.queueTimeoutMs!) {
+          if (exec.signal.aborted) throw new Error('aborted')
+          if (!(await mynah.isSpeaking(args.session_id, exec.signal))) break
+          await new Promise((r) => setTimeout(r, 150))
+        }
+        waited = Date.now() - t0
+      }
+      await mynah.speak(args.session_id, args.text, type, interrupt, exec.signal)
+      return { ok: true, session_id: args.session_id, type, chars: args.text.length, waited_ms: waited }
     },
   }))
 
