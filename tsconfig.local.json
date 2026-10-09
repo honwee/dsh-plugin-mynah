@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "typeRoots": [
+      "/Users/honwee/2026/Atelier/deepseek-harness/node_modules/@types"
+    ],
+    "paths": {
+      "@deepseek-ai/cordis": [
+        "/Users/honwee/2026/Atelier/deepseek-harness/vendor/cordis"
+      ],
+      "@deepseek-ai/schemastery": [
+        "/Users/honwee/2026/Atelier/deepseek-harness/vendor/schemastery"
+      ],
+      "@deepseek-ai/dsh-tools": [
+        "/Users/honwee/2026/Atelier/deepseek-harness/packages/core/tools"
+      ],
+      "@deepseek-ai/dsh-system-prompt": [
+        "/Users/honwee/2026/Atelier/deepseek-harness/packages/core/system-prompt"
+      ]
+    }
+  }
+}

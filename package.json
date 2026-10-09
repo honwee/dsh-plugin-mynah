@@ -1,0 +1,65 @@
+{
+  "name": "dsh-plugin-mynah",
+  "version": "0.1.0",
+  "description": "Give your DeepSeek Harness agent a talking face: drive a Mynah realtime digital human (speak, interrupt, sessions, channels, knowledge base).",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:local": "../../Atelier/deepseek-harness/node_modules/.bin/tsc -p tsconfig.local.json",
+    "test:local": "../../Atelier/deepseek-harness/node_modules/.bin/vitest run --config vitest.config.ts",
+    "check:local": "npm run build:local && npm run test:local"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "digital-human",
+    "avatar",
+    "tts",
+    "mynah"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/honwee/dsh-plugin-mynah.git"
+  },
+  "homepage": "https://github.com/honwee/mynah",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=0.1.2-alpha.5",
+    "@deepseek-ai/dsh-tools": ">=0.1.2-alpha.5",
+    "@deepseek-ai/schemastery": ">=0.1.2-alpha.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0",
+    "vite-tsconfig-paths": "^5.1.0",
+    "@deepseek-ai/dsh-system-prompt": ">=0.1.2-alpha.5"
+  }
+}

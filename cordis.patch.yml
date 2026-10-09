@@ -1,0 +1,9 @@
+# Bundle patch for dsh-plugin-mynah (installed via `dsh plugin add dsh-plugin-mynah`).
+# Point it at your Mynah instance here, or leave config empty and set
+# MYNAH_URL / MYNAH_ADMIN_URL / MYNAH_USER / MYNAH_PASSWORD in the environment.
+- insert:
+    - id: mynah
+      name: dsh-plugin-mynah
+      config:
+        baseUrl: https://127.0.0.1:8443
+        adminUrl: https://127.0.0.1:9443
