@@ -8,6 +8,11 @@ This plugin lets a dsh agent drive a [Mynah](https://github.com/honwee/mynah) re
 agent (DeepSeek Harness)  ──mynah_speak──▶  Mynah cored  ──WebRTC──▶  browser: a face that talks
 ```
 
+<img src="docs/demo.gif" alt="dsh-plugin-mynah demo" width="800">
+
+<sub>The agent found the live session with `mynah_sessions`, then spoke through `mynah_speak`. Lip-synced video is Mynah; the words came from the agent.</sub>
+
+
 ## Tools
 
 | Tool | What it does | Needs admin login |

@@ -8,6 +8,11 @@
 Agent (DeepSeek Harness) ──mynah_speak──▶ Mynah cored ──WebRTC──▶ 浏览器里一张会说话的脸
 ```
 
+<img src="docs/demo.gif" alt="dsh-plugin-mynah demo" width="800">
+
+<sub>Agent 先用 `mynah_sessions` 找到在线会话，再用 `mynah_speak` 开口。画面和口型是 Mynah 的，话是 Agent 让它说的。</sub>
+
+
 ## 工具
 
 | 工具 | 作用 | 需要管理员登录 |
