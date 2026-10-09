@@ -20,7 +20,7 @@ export interface MynahConfig {
   insecureTls?: boolean
 }
 
-export interface MynahSession { id: string; created_at: string; turns: number; speaking: boolean; voice: string }
+export interface MynahSession { id: string; created_at: string; turns: number; speaking: boolean; voice: boolean }
 export interface MynahChannel { id: number; slug: string; name: string; enabled: boolean; access_mode: string; brand_name?: string; version?: number; max_concurrent?: number }
 
 interface ReqInit { method?: string; json?: unknown; multipart?: { field: string; filename: string; content: string; contentType?: string }; auth?: boolean; signal?: AbortSignal }

@@ -62,11 +62,14 @@ export function apply(ctx: Context, config: Config = {}) {
     description: 'List live Mynah sessions (people currently connected to a digital human). Returns session ids usable with mynah_speak.',
     parameters: {},
     output: {
-      schema: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { id: { type: 'string' }, created_at: { type: 'string' }, turns: { type: 'integer' }, speaking: { type: 'boolean' }, voice: { type: 'string' } } } },
-      render: (_a, v) => text(v.length ? v.map(s => `- ${s.id} (turns=${s.turns}, speaking=${s.speaking}, since ${s.created_at})`).join('\n') : 'No live sessions. Ask the user to open a Mynah channel page first.'),
+      schema: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { id: { type: 'string' }, created_at: { type: 'string' }, turns: { type: 'integer' }, speaking: { type: 'boolean' }, voice_enabled: { type: 'boolean', description: 'visitor microphone is on' } } } },
+      render: (_a, v) => text(v.length ? v.map(s => `- ${s.id} (turns=${s.turns}, speaking=${s.speaking}, mic=${s.voice_enabled ? 'on' : 'off'}, since ${s.created_at})`).join('\n') : 'No live sessions. Ask the user to open a Mynah channel page first.'),
     },
     isConcurrencySafe: () => true,
-    async execute(_a, exec) { return (await mynah.sessions(exec.signal)).map(s => ({ id: s.id, created_at: String(s.created_at), turns: s.turns, speaking: s.speaking, voice: s.voice ?? '' })) },
+    async execute(_a, exec) {
+      const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v))
+      return (await mynah.sessions(exec.signal)).map((s: any) => ({ id: str(s.id), created_at: str(s.created_at), turns: Number.isFinite(Number(s.turns)) ? Math.trunc(Number(s.turns)) : 0, speaking: !!s.speaking, voice_enabled: !!s.voice }))
+    },
   }))
 
   ctx.tools.register(defineTool({
@@ -79,7 +82,7 @@ export function apply(ctx: Context, config: Config = {}) {
     },
     isConcurrencySafe: () => true,
     async execute(_a, exec) {
-      return (await mynah.channels(exec.signal)).map(c => ({ id: c.id, slug: c.slug, name: c.name, enabled: !!c.enabled, access_mode: c.access_mode ?? '', url: `${mynah.baseUrl}/channel/${c.slug}` }))
+      return (await mynah.channels(exec.signal)).map((c: any) => ({ id: Math.trunc(Number(c.id)) || 0, slug: String(c.slug ?? ''), name: String(c.name ?? ''), enabled: !!c.enabled, access_mode: String(c.access_mode ?? ''), url: `${mynah.baseUrl}/channel/${c.slug}` }))
     },
   }))
 

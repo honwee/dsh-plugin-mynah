@@ -17,7 +17,7 @@ beforeAll(async () => {
       calls.push({ path: req.url!, body, auth: req.headers.authorization })
       const send = (o: unknown) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(o)) }
       if (req.url === '/api/v1/auth/login') return send({ code: 0, data: { token: 'jwt-123', must_change_password: false } })
-      if (req.url === '/api/v1/sessions') return send({ code: 0, data: [{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice: 'zh-CN-XiaoxiaoNeural' }] })
+      if (req.url === '/api/v1/sessions') return send({ code: 0, data: [{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice: true }] })
       if (req.url === '/api/v1/channels') return send({ code: 0, data: [{ id: 11, slug: 'test', name: 'Mynah 演示', enabled: true, access_mode: 'public' }] })
       if (req.url === '/human' || req.url === '/interrupt_talk') return send({ code: 0, data: null })
       send({ code: 0, data: { ok: true } })
@@ -53,7 +53,7 @@ describe('dsh-plugin-mynah', () => {
     const ctx = await boot()
     const tool = ctx.tools.get('mynah_sessions')!
     const value = await tool.execute({}, exec('mynah_sessions', {}))
-    expect(value).toEqual([{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice: 'zh-CN-XiaoxiaoNeural' }])
+    expect(value).toEqual([{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice_enabled: true }])
     expect(calls.some((c) => c.path === '/api/v1/sessions' && c.auth === 'Bearer jwt-123')).toBe(true)
   })
   it('mynah_speak posts verbatim text to /human with interrupt', async () => {
