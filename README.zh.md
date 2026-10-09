@@ -10,15 +10,16 @@ Agent (DeepSeek Harness) ──mynah_speak──▶ Mynah cored ──WebRTC─�
 
 <img src="docs/agent-demo.gif" alt="dsh-plugin-mynah agent demo" width="900">
 
-<sub>左：DeepSeek Harness Web 界面，`deepseek-flash` 跑 Agent。右：Mynah 频道页。一句指令，Agent 依次调用 `mynah_sessions` → `mynah_speak` → `mynah_status` → `mynah_speak`，数字人把话说出来。 Full video: <a href="docs/agent-demo.mp4">docs/agent-demo.mp4</a>.</sub>
+<sub>左：DeepSeek Harness Web 界面，`deepseek-flash` 跑 Agent。右：Mynah 频道页。一句指令，Agent 依次调用 `mynah_sessions` → `mynah_action`（挥手）→ `mynah_speak` → `mynah_status` → `mynah_speak`，第二句自动排在第一句后面。语音是 Qwen 云端实时音色，Mynah 侧从收到请求到第一帧带口型的画面约一秒。 Full video: <a href="docs/agent-demo.mp4">docs/agent-demo.mp4</a>.</sub>
 
 
 ## 工具
 
 | 工具 | 作用 | 需要管理员登录 |
 |---|---|---|
-| `mynah_speak` | 让数字人在某个在线会话里说 `text`。`type=echo` 原话播报（默认）；`type=chat` 交给 Mynah 自己的对话大脑回答。 | 否 |
+| `mynah_speak` | 让数字人在某个在线会话里说 `text`。`type=echo` 原话播报（默认）；`type=chat` 交给 Mynah 自己的对话大脑回答。默认排在当前这句后面说，`interrupt=true` 才打断。 | 否 |
 | `mynah_interrupt` | 让数字人闭嘴。 | 否 |
+| `mynah_action` | 让数字人做一个动作，例如 `wave` 挥手。 | 否 |
 | `mynah_sessions` | 列出在线会话（拿 session id 给 `mynah_speak` 用）。 | 是 |
 | `mynah_channels` | 列出已发布频道和访客链接。 | 是 |
 | `mynah_status` | 实时核心 / 数字人引擎 / ASR / TTS / 数据库健康状态。 | 是 |

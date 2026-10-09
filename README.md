@@ -10,15 +10,16 @@ agent (DeepSeek Harness)  ──mynah_speak──▶  Mynah cored  ──WebRTC�
 
 <img src="docs/agent-demo.gif" alt="dsh-plugin-mynah agent demo" width="900">
 
-<sub>Left: DeepSeek Harness Web UI running the agent with `deepseek-flash`. Right: a Mynah channel page. One prompt; the agent calls `mynah_sessions` → `mynah_speak` → `mynah_status` → `mynah_speak`, and the digital human says the words. Full video: <a href="docs/agent-demo.mp4">docs/agent-demo.mp4</a>.</sub>
+<sub>Left: DeepSeek Harness Web UI running the agent with `deepseek-flash`. Right: a Mynah channel page. One prompt; the agent calls `mynah_sessions` → `mynah_action` (wave) → `mynah_speak` → `mynah_status` → `mynah_speak`. The second sentence is queued automatically behind the first. Voice is Qwen realtime in the cloud; request-to-first-lip-synced-frame is about one second on the Mynah side. Full video: <a href="docs/agent-demo.mp4">docs/agent-demo.mp4</a>.</sub>
 
 
 ## Tools
 
 | Tool | What it does | Needs admin login |
 |---|---|---|
-| `mynah_speak` | Avatar says `text` in a live session. `type=echo` speaks verbatim (default); `type=chat` routes through Mynah's own brain. | no |
+| `mynah_speak` | Avatar says `text` in a live session. `type=echo` speaks verbatim (default); `type=chat` routes through Mynah's own brain. Queues behind the current sentence unless `interrupt=true`. | no |
 | `mynah_interrupt` | Stop the avatar mid-sentence. | no |
+| `mynah_action` | Play a gesture such as `wave` in a live session. | no |
 | `mynah_sessions` | List live sessions (ids for `mynah_speak`). | yes |
 | `mynah_channels` | List published channels with visitor URLs. | yes |
 | `mynah_status` | Health of core / avatar engines / ASR / TTS / DB. | yes |
