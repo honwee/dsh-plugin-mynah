@@ -19,7 +19,8 @@ beforeAll(async () => {
       if (req.url === '/api/v1/auth/login') return send({ code: 0, data: { token: 'jwt-123', must_change_password: false } })
       if (req.url === '/api/v1/sessions') return send({ code: 0, data: [{ id: '100001', created_at: '2026-10-09T03:00:00Z', turns: 2, speaking: false, voice: true }] })
       if (req.url === '/api/v1/channels') return send({ code: 0, data: [{ id: 11, slug: 'test', name: 'Mynah 演示', enabled: true, access_mode: 'public' }] })
-      if (req.url === '/human' || req.url === '/interrupt_talk') return send({ code: 0, data: null })
+      if (req.url === '/channel/test/config') return send({ access_mode: 'public', actions: ['wave'], name: 'Mynah 演示' })
+      if (req.url === '/human' || req.url === '/interrupt_talk' || req.url === '/action') return send({ code: 0, data: null })
       send({ code: 0, data: { ok: true } })
     })
   })
@@ -47,7 +48,7 @@ describe('dsh-plugin-mynah', () => {
   it('registers the six mynah_* tools into the tool registry', async () => {
     const ctx = await boot()
     const names = ctx.tools.schemas().map((s) => s.name).filter((n) => n.startsWith('mynah_')).sort()
-    expect(names).toEqual(['mynah_channels', 'mynah_interrupt', 'mynah_kb_add', 'mynah_sessions', 'mynah_speak', 'mynah_status'])
+    expect(names).toEqual(['mynah_action', 'mynah_channels', 'mynah_interrupt', 'mynah_kb_add', 'mynah_sessions', 'mynah_speak', 'mynah_status'])
   })
   it('mynah_sessions logs in once and lists live sessions', async () => {
     const ctx = await boot()
@@ -63,5 +64,13 @@ describe('dsh-plugin-mynah', () => {
     expect(value).toMatchObject({ ok: true, session_id: '100001', type: 'echo' })
     const human = calls.filter((c) => c.path === '/human').at(-1)!
     expect(human.body).toEqual({ sessionid: '100001', text: '你好，我是 Mynah。', type: 'echo', interrupt: true })
+  })
+  it('mynah_channels reports gestures and mynah_action triggers one', async () => {
+    const ctx = await boot()
+    const ch = await ctx.tools.get('mynah_channels')!.execute({}, exec('mynah_channels', {})) as any[]
+    expect(ch[0]).toMatchObject({ slug: 'test', actions: ['wave'] })
+    const v = await ctx.tools.get('mynah_action')!.execute({ session_id: '100001' }, exec('mynah_action', {}))
+    expect(v).toEqual({ ok: true, action: 'wave' })
+    expect(calls.filter((c) => c.path === '/action').at(-1)!.body).toEqual({ sessionid: '100001', action: 'wave' })
   })
 })

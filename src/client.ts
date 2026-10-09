@@ -101,6 +101,10 @@ export class MynahClient {
   interrupt(sessionid: string, signal?: AbortSignal) { return this.http(`${this.baseUrl}/interrupt_talk`, { json: { sessionid }, signal }) }
   isSpeaking(sessionid: string, signal?: AbortSignal): Promise<boolean> { return this.http(`${this.baseUrl}/is_speaking`, { json: { sessionid }, signal }) }
   channelConfig(slug: string, signal?: AbortSignal) { return this.http(`${this.baseUrl}/channel/${encodeURIComponent(slug)}/config`, { signal }) }
+  /** Play a baked one-shot gesture (e.g. "wave") in a live session. */
+  action(sessionid: string, action: string, signal?: AbortSignal) { return this.http(`${this.baseUrl}/action`, { json: { sessionid, action }, signal }) }
+  /** Gesture ids available on the default visitor page's avatar. */
+  actions(signal?: AbortSignal): Promise<string[]> { return this.http(`${this.baseUrl}/actions`, { signal }) }
 
   // ---- admin surface ----
   health(signal?: AbortSignal) { return this.http(`${this.adminUrl}/api/v1/health`, { auth: true, signal }) }

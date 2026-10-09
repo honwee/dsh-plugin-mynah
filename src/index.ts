@@ -58,6 +58,17 @@ export function apply(ctx: Context, config: Config = {}) {
   }))
 
   ctx.tools.register(defineTool({
+    name: 'mynah_action',
+    description: 'Make the Mynah digital human perform a gesture in a live session, e.g. "wave" (挥手). Use it to greet or to punctuate what it says. Gesture ids come from mynah_channels (actions per channel) or default to "wave".',
+    parameters: {
+      session_id: { type: 'string', required: true, description: 'Live Mynah session id' },
+      action: { type: 'string', description: 'Gesture id, default "wave"' },
+    },
+    output: { schema: { type: 'object', additionalProperties: false, properties: { ok: { type: 'boolean' }, action: { type: 'string' } } }, render: (_a, v) => text(`Mynah performed gesture "${v.action}".`) },
+    async execute(args, exec) { const action = args.action || 'wave'; await mynah.action(args.session_id, action, exec.signal); return { ok: true, action } },
+  }))
+
+  ctx.tools.register(defineTool({
     name: 'mynah_sessions',
     description: 'List live Mynah sessions (people currently connected to a digital human). Returns session ids usable with mynah_speak.',
     parameters: {},
@@ -74,15 +85,20 @@ export function apply(ctx: Context, config: Config = {}) {
 
   ctx.tools.register(defineTool({
     name: 'mynah_channels',
-    description: 'List published Mynah channels (shareable digital-human pages) with their visitor URLs.',
+    description: 'List published Mynah channels (shareable digital-human pages) with their visitor URLs and the gesture ids (actions) each channel\'s avatar supports.',
     parameters: {},
     output: {
-      schema: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { id: { type: 'integer' }, slug: { type: 'string' }, name: { type: 'string' }, enabled: { type: 'boolean' }, access_mode: { type: 'string' }, url: { type: 'string' } } } },
-      render: (_a, v) => text(v.length ? v.map(c => `- [${c.enabled ? 'on' : 'off'}] ${c.name} (${c.access_mode}) ${c.url}`).join('\n') : 'No channels published yet.'),
+      schema: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { id: { type: 'integer' }, slug: { type: 'string' }, name: { type: 'string' }, enabled: { type: 'boolean' }, access_mode: { type: 'string' }, url: { type: 'string' }, actions: { type: 'array', items: { type: 'string' } } } } },
+      render: (_a, v) => text(v.length ? v.map(c => `- [${c.enabled ? 'on' : 'off'}] ${c.name} (${c.access_mode}) ${c.url}${(c.actions ?? []).length ? ' gestures: ' + (c.actions ?? []).join(',') : ''}`).join('\n') : 'No channels published yet.'),
     },
     isConcurrencySafe: () => true,
     async execute(_a, exec) {
-      return (await mynah.channels(exec.signal)).map((c: any) => ({ id: Math.trunc(Number(c.id)) || 0, slug: String(c.slug ?? ''), name: String(c.name ?? ''), enabled: !!c.enabled, access_mode: String(c.access_mode ?? ''), url: `${mynah.baseUrl}/channel/${c.slug}` }))
+      const list = await mynah.channels(exec.signal)
+      return Promise.all(list.map(async (c: any) => {
+        let actions: string[] = []
+        if (c.enabled) { try { const cfg = await mynah.channelConfig(String(c.slug), exec.signal); actions = Array.isArray(cfg?.actions) ? cfg.actions.map(String) : [] } catch { /* channel page may be private */ } }
+        return { id: Math.trunc(Number(c.id)) || 0, slug: String(c.slug ?? ''), name: String(c.name ?? ''), enabled: !!c.enabled, access_mode: String(c.access_mode ?? ''), url: `${mynah.baseUrl}/channel/${c.slug}`, actions }
+      }))
     },
   }))
 
