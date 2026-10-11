@@ -41,8 +41,8 @@ Then tell it where Mynah lives. Either edit the bundle row in your profile's `co
 - id: mynah
   name: dsh-plugin-mynah
   config:
-    baseUrl: https://do.au56.com:8443      # visitor / realtime endpoint
-    adminUrl: https://do.au56.com:9443     # admin console
+    baseUrl: https://your-mynah-host:8443      # visitor / realtime endpoint
+    adminUrl: https://your-mynah-host:9443     # admin console
     username: admin
     password: ********
 ```

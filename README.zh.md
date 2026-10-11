@@ -41,8 +41,8 @@ dsh plugin --profile web add ./dsh-plugin-mynah
 - id: mynah
   name: dsh-plugin-mynah
   config:
-    baseUrl: https://do.au56.com:8443      # 访客 / 实时端
-    adminUrl: https://do.au56.com:9443     # 管理控制台
+    baseUrl: https://your-mynah-host:8443      # 访客 / 实时端
+    adminUrl: https://your-mynah-host:9443     # 管理控制台
     username: admin
     password: ********
 ```
