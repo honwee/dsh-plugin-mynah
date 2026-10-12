@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-mynah",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Give your DeepSeek Harness agent a talking face: drive a Mynah realtime digital human (speak, interrupt, sessions, channels, knowledge base).",
   "type": "module",
   "main": "dist/index.js",

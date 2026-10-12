@@ -7,9 +7,9 @@ import { request as httpsRequest } from 'node:https'
 import { randomBytes } from 'node:crypto'
 
 export interface MynahConfig {
-  /** Realtime / visitor endpoint, e.g. https://do.au56.com:8443 (env MYNAH_URL) */
+  /** Realtime / visitor endpoint, e.g. https://your-mynah-host:8443 (env MYNAH_URL) */
   baseUrl?: string
-  /** Admin console endpoint, e.g. https://do.au56.com:9443 (env MYNAH_ADMIN_URL) */
+  /** Admin console endpoint, e.g. https://your-mynah-host:9443 (env MYNAH_ADMIN_URL) */
   adminUrl?: string
   /** Admin login, needed for sessions / channels / status / kb tools (env MYNAH_USER / MYNAH_PASSWORD) */
   username?: string
